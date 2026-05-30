@@ -22,10 +22,11 @@ private:
     QHBoxLayout * m_layout{new QHBoxLayout{}};
     QPushButton * m_close{new QPushButton{"⨉"}};
     QPushButton * m_copy{new QPushButton{"⧉"}};
-    QLabel * m_label{new QLabel{m_success}};
+    QLabel * m_log{new QLabel{}};
 
 public:
-    Log(QString log, QWidget * parent = nullptr) : QWidget{parent} {
+    Log(QString log, QWidget * parent = nullptr) :
+            QWidget{parent}, m_log{new QLabel{log}} {
         setLayout(m_layout);
         m_layout->addWidget(m_close);
         m_layout->addWidget(m_label);
@@ -38,19 +39,25 @@ public:
         m_closeError->setFixedSize(30, 30);
         m_copyError->setFixedSize(30, 30);
 
-        connect(m_closeError, &QPushButton::clicked, this, &UDP_Window::defaultTitle);
-        connect(m_copyError, &QPushButton::clicked, this, &UDP_Window::copyError);
+        connect(m_close, &QPushButton::clicked, this, &QWidget::hide);
+        connect(m_copy, &QPushButton::clicked, this, &Log::copy);
 
         setObjectName("Log");
-        m_closeError->setObjectName("LogClose");
-        m_copyError->setObjectName("LogCopy");
+        m_close->setObjectName("LogClose");
+        m_copy->setObjectName("LogCopy");
         m_label->setObjectName("LogLabel");
-
-        setLog(log);
     }
 
     void setLog(QString log) {
         m_label->setText(log);
+    }
+
+    void copy() {
+        QClipboard* clipboard = QApplication::clipboard();
+
+        const char * errorMessage = qPrintable(m_errorLabel->text());
+
+        clipboard->setText(errorMessage);
     }
 };
 
@@ -63,32 +70,100 @@ public:
     TitleOrLog(QString title = {}, QString log = {},
             QWidget * parent = nullptr) : QWidget{parent},
             m_label{new Label{label}}, m_log{new Log{log}} {
-        label();
+        title();
         setObjectName("LabelOrLog")
         m_title->setObjectName("Title")
     }
 
-    void label() {
-        m_label->show();
+    void title() {
+        m_title->show();
         m_log->hide();
     }
 
+    void title(QString log) {
+        setTitle(log);
+        title();
+    }
+
+    void setTitle(QString title) {
+        m_title->setText(title);
+    }
+
     void log() {
-        m_label->hide();
+        m_title->hide();
         m_log->show();
     }
 
-    void 
+    void log(QString log) {
+        setLog(log);
+        log();
+    }
+
+    void setLog(QString log) {
+        m_log.setLog(log);
+    }
+};
+
+class ControlButtons : QWidget {
+private:
+    QHBoxLayout * m_layout{new QHBoxLayout{}};
+    QPushButton * m_min{new QPushButton{}};
+    QPushButton * m_max{new QPushButton{}};
+    QPushButton * m_close{new QPushButton{}};
+
+public:
+    ControlButtons(QWidget * parent) : QWidget(parent) {
+        m_min->setFixedSize(30, 30);
+        m_min->setObjectName("ControlButtonsMin");
+        m_min->setContentsMargins(0, 0, 0, 0)
+        m_min->setIcon(style()->standardIcon(QStyle::SP_TitleBarMinButton));
+        connect(m_minButton, &QPushButton::clicked, this, &QWidget::showMinimized);
+
+        m_max->setFixedSize(30, 30);
+        m_max->setObjectName("ControlButtonsMax");
+        m_max->setContentsMargins(5, 0, 5, 0)
+        m_max->setIcon(style()->standardIcon(QStyle::SP_TitleBarMaxButton));
+        connect(m_maxButton, &QPushButton::clicked, this, &QWidget::showMaximized);
+
+        m_close->setFixedSize(30, 30);
+        m_close->setStyleSheet("ControlButtonsClose");
+        m_close->setContentsMargins(0, 0, 0, 0)
+        m_close->setIcon(style()->standardIcon(QStyle::SP_TitleBarCloseButton));
+        connect(m_close, &QPushButton::clicked, this, &QWidget::close);
+
+        m_layout->addWidget(m_min);
+        m_layout->addWidget(m_max);
+        m_layout->addWidget(m_close);
+
+        setLayout(m_layout);
+
+        m_layout.setContentsMargins(5, 5, 5, 5);
+        m_layout.setFixedHeight(40);
+    }
 };
 
 class CustomTitleBar : public QWidget {
 private:
-    QHBoxLayout * m_titleLayout{new QHBoxLayout{}};
-    QPushButton * m_minButton{new QPushButton{}};
-    QPushButton * m_maxButton{new QPushButton{}};
-    QPushButton * m_closeButton{new QPushButton{}};
+    QHBoxLayout * m_layout{new QHBoxLayout{}};
+    QPushButton * m_button{new QPushButton{}};
+    TitleOrLog * m_titleOrLog{new TitleOrLog{}};
+    ControlButtons * m_controlButtons{new ControlButtons{}};
 
 public:
+    CustomTitleBar(QString button = {}, 
+            QString title = {}, QString log = {},
+            QWidget * parent = nullptr) : QWidget{parent},
+            m_button{new QPushButton{button}},
+            m_titleOrLog{new TitleOrLog{title, log}} {
+        setLayout(m_layout);
+        addWidget(m_button);
+        addWidget(m_titleOrLog);
+        addWidget(m_controlButtons);
+    }
+};
+
+class UDP_Form : public QFormLayout {
+private:
 };
 
 class UDP_Window : public QWidget {
