@@ -142,7 +142,7 @@ public:
     }
 };
 
-class CustomTitleBar : public QWidget {
+class TitleBarButtonLog : public QWidget {
 private:
     QHBoxLayout * m_layout{new QHBoxLayout{}};
     QPushButton * m_button{new QPushButton{}};
@@ -150,7 +150,7 @@ private:
     ControlButtons * m_controlButtons{new ControlButtons{}};
 
 public:
-    CustomTitleBar(QString button = {}, 
+    TitleBarButtonLog(QString button = {}, 
             QString title = {}, QString log = {},
             QWidget * parent = nullptr) : QWidget{parent},
             m_button{new QPushButton{button}},
@@ -164,22 +164,6 @@ public:
 
 class UDP_Form : public QFormLayout {
 private:
-};
-
-class UDP_Window : public QWidget {
-private:
-    QVBoxLayout * m_mainLayout{new QVBoxLayout{}};
-
-    bool m_isDragging{false};
-    QPoint * m_dragPosition{new QPoint{}};
-
-    bool m_isResizing{false};
-    Qt::Edges m_resizeEdge{};
-    QPoint m_dragPos;
-    QRect m_origGeometry;
-    const int m_borderWidth{8};
-
-    QFormLayout * m_form{new QFormLayout{}};
     QLineEdit * m_ipSource{new QLineEdit{}};
     QLineEdit * m_ipDestantion{new QLineEdit{}};
     QLineEdit * m_portSource{new QLineEdit{}};
@@ -193,17 +177,132 @@ private:
     QPushButton * m_send{new QPushButton{"Send"}};
 
 public:
-    UDP_Window(QWidget * parent = nullptr) : QWidget{parent} {
-        customTitle();
+    UDP_Form(QWidget * parent = nullptr) :
+            QFormLayout{parent} {
+        addRow("Ip source: ", m_ipSource);
+        addRow("Ip destantion: ", m_ipDestantion);
+        addRow("Port source: ", m_portSource);
+        addRow("Port destantion: ", m_portDestantion);
+        addRow( "Mac source: ", m_macSource);
+        addRow("Mac destantion: ", m_macDestantion);
+        addRow("Interface: ", m_interface);
+        addRow("File: ", m_fileCheckBox);
 
-        setLayout(m_mainLayout);
+        m_fileCheckBox->setTristate(false);
+
+        selectFile();
+
+        setContentsMargins(10, 10, 10, 10);
+        setVerticalSpacing(5);
+        setHorizontalSpacing(20);
+
+        m_data->setTabChangesFocus(true);
+
+        for (int i = 0; i < count(); ++i) {
+            QLayoutItem* item = m_form->itemAt(i);
+            if (QWidget* widget = item->widget()) {
+                widget->setFixedHeight(30); 
+                widget->setContentsMargins(0, 0, 0, 0);
+            }
+        }
+        deleteText();
+        selectData();
+    }
+
+    void deleteText() {
+        QFormLayout::TakeRowResult res = takeRow(8);
+        
+        if (res.labelItem) {
+            if (QWidget *labelWidget = res.labelItem->widget()) {
+                labelWidget->deleteLater();
+            }
+            delete res.labelItem;
+        }
+    }
+
+    void selectFile(void) {
+        m_data->hide();
+        m_fileName->show();
+        insertRow(8, "File name: ", m_fileName);
+    }
+
+    void selectData(void) {
+        m_fileName->hide();
+        m_data->show();
+        insertRow(8, "Data: ", m_data);
+    }
+
+    void onFileBoxToggle(bool checked) {
+        deleteText();
+        checked ? selectFile() : selectData();
+    }
+
+    QString getIpSource(void) {
+        return m_ipSource->text();
+    }
+
+    QString getIpDestantion(void) {
+        return m_ipDestantion->text();
+    }
+
+    QString getPortSource(void) {
+        return m_portSource->text();
+    }
+
+    QString getPortDestantion(void) {
+        return m_portDestantion->text();
+    }
+
+    QString getMacSource(void) {
+        return m_macSource->text();
+    }
+
+    QString getMacDestantion(void) {
+        return m_macDestantion->text();
+    }
+
+    QString getInterface(void) {
+        return m_interface->text();
+    }
+
+    bool getIsFile(void) {
+        return m_isFile->text();
+    }
+
+    QString getData(void) {
+        return m_data->text();
+    }
+
+    QString getFileName(void) {
+        return m_fileName->text();
+    }
+};
+
+class UDP_Window : public QWidget {
+private:
+    QVBoxLayout * m_layout{new QVBoxLayout{}};
+
+    UDP_Form * m_form{new UDP_Form{}};
+
+    bool m_isDragging{false};
+    QPoint * m_dragPosition{new QPoint{}};
+
+    bool m_isResizing{false};
+    Qt::Edges m_resizeEdge{};
+    QPoint m_dragPos;
+    QRect m_origGeometry;
+    const int m_borderWidth{8};
+
+public:
+    UDP_Window(QWidget * parent = nullptr) : QWidget{parent} {
+        setLayout(m_layout);
 
         resize(500, 500);
 
-        m_mainLayout->setContentsMargins(0, 0, 0, 0);
-        m_mainLayout->setSpacing(0);
+        m_layout->setContentsMargins(0, 0, 0, 0);
+        m_layout->setSpacing(0);
 
-        m_mainLayout->addLayout(m_form); 
+        m_layout->addLayout(m_form); 
 
         connect(m_fileCheckBox, &QCheckBox::toggled, this, &UDP_Window::onFileBoxToggle);
 
@@ -237,92 +336,6 @@ public:
     }
 
 protected:
-    virtual void customTitle(void) {
-        setWindowFlags(Qt::Window | Qt::FramelessWindowHint); 
-
-        m_customTitleBar->installEventFilter(this);
-        m_titleLabel->installEventFilter(this);
-
-        setMouseTracking(true);
-
-        m_customTitleBar->setFixedHeight(40);
-
-        m_titleLabel->setStyleSheet("color: white; font-weight: bold;");
-
-        createTitleError();
-
-        m_send->setFixedSize(60, 30);
-        m_send->setStyleSheet("background-color: #000033");
-        connect(m_send, &QPushButton::clicked, this, &UDP_Window::clickSend);
-
-        m_minButton->setFixedSize(30, 30);
-        m_minButton->setStyleSheet("background-color: #660066;");
-        m_minButton->setIcon(style()->standardIcon(QStyle::SP_TitleBarMinButton));
-        connect(m_minButton, &QPushButton::clicked, this, &QWidget::showMinimized);
-
-        m_maxButton->setFixedSize(30, 30);
-        m_maxButton->setStyleSheet("background-color: #880066;");
-        m_maxButton->setIcon(style()->standardIcon(QStyle::SP_TitleBarMaxButton));
-        connect(m_maxButton, &QPushButton::clicked, this, &QWidget::showMaximized);
-
-        m_closeButton->setFixedSize(30, 30);
-        m_closeButton->setStyleSheet("background-color: #880033;");
-        m_closeButton->setIcon(style()->standardIcon(QStyle::SP_TitleBarCloseButton));
-        connect(m_closeButton, &QPushButton::clicked, this, &QWidget::close);
-
-        m_titleLayout->addWidget(m_send);
-        m_titleLayout->addStretch();
-        m_titleLayout->addWidget(m_titleLabel);
-        m_titleLayout->addWidget(m_titleError);
-        m_titleError->hide();
-        m_titleLayout->addStretch();
-        m_titleLayout->addWidget(m_minButton);
-        m_titleLayout->addWidget(m_maxButton);
-        m_titleLayout->addWidget(m_closeButton);
-        m_titleLayout->setContentsMargins(5, 5, 5, 5);
-
-        m_customTitleBar->setLayout(m_titleLayout);
-
-        m_mainLayout->addWidget(m_customTitleBar);
-
-        m_customTitleBar->setMouseTracking(true);
-        m_titleLabel->setMouseTracking(true);
-
-        setObjectName("MainWindow");
-        setStyleSheet(
-                "QWidget#MainWindow {"
-                "   background-color: #000033;"
-                "   border: 1px solid #cccccc;"
-                "   border-radius: 6px;"
-                "}"
-                "QTextEdit, QPushButton,"
-                "QLineEdit, QWidget#TitleBar {"
-                "   border: 1px solid #cccccc;"
-                "   background-color: #330066;"
-                "   color: white;"
-                "   border-radius: 6px;"
-                "}"
-                "QLabel {"
-                "   color: white;"
-                "}"
-                "QCheckBox::indicator {"
-                    "width: 18px;"
-                    "height: 18px;"
-                    "border: 2px solid #cccccc;"
-                    "border-radius: 4px;"
-                    "background-color: #330066;"
-                "}"
-                "QCheckBox::indicator:checked {"
-                    "background-color: #880033;"
-                "}"
-        );
-        m_customTitleBar->setObjectName("TitleBar");
-        defaultTitle();
-    }
-
-    virtual void createTitleError(void) {
-    }
-
     bool eventFilter(QObject *watched, QEvent *event) override {
         if (m_isResizing || m_resizeEdge != 0) {
             return QWidget::eventFilter(watched, event);
