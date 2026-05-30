@@ -17,22 +17,83 @@
 #include <udp.h>
 #include <stddef.h>
 
-
-class UDP_Window : public QWidget {
+class Log : public QWidget {
 private:
-    QVBoxLayout * m_mainLayout{new QVBoxLayout{}};
+    QHBoxLayout * m_layout{new QHBoxLayout{}};
+    QPushButton * m_close{new QPushButton{"⨉"}};
+    QPushButton * m_copy{new QPushButton{"⧉"}};
+    QLabel * m_label{new QLabel{m_success}};
+
+public:
+    Log(QString log, QWidget * parent = nullptr) : QWidget{parent} {
+        setLayout(m_layout);
+        m_layout->addWidget(m_close);
+        m_layout->addWidget(m_label);
+        m_layout->addWidget(m_copyError);
+
+        m_titleError->setContentsMargins(0, 0, 0, 0);
+        m_errorLayout->setContentsMargins(0, 0, 0, 0);
+
+        setFixedHeight(40);
+        m_closeError->setFixedSize(30, 30);
+        m_copyError->setFixedSize(30, 30);
+
+        connect(m_closeError, &QPushButton::clicked, this, &UDP_Window::defaultTitle);
+        connect(m_copyError, &QPushButton::clicked, this, &UDP_Window::copyError);
+
+        setObjectName("Log");
+        m_closeError->setObjectName("LogClose");
+        m_copyError->setObjectName("LogCopy");
+        m_label->setObjectName("LogLabel");
+
+        setLog(log);
+    }
+
+    void setLog(QString log) {
+        m_label->setText(log);
+    }
+};
+
+class TitleOrLog : public QWidget {
+private:
+    QLabel * m_title{new QLabel{}};
+    Log * m_log{new Log{}};
+
+public:
+    TitleOrLog(QString title = {}, QString log = {},
+            QWidget * parent = nullptr) : QWidget{parent},
+            m_label{new Label{label}}, m_log{new Log{log}} {
+        label();
+        setObjectName("LabelOrLog")
+        m_title->setObjectName("Title")
+    }
+
+    void label() {
+        m_label->show();
+        m_log->hide();
+    }
+
+    void log() {
+        m_label->hide();
+        m_log->show();
+    }
+
+    void 
+};
+
+class CustomTitleBar : public QWidget {
+private:
     QHBoxLayout * m_titleLayout{new QHBoxLayout{}};
-    QWidget * m_customTitleBar{new QWidget{}};
-    QLabel * m_titleLabel{new QLabel{"UDP Transfer"}};
     QPushButton * m_minButton{new QPushButton{}};
     QPushButton * m_maxButton{new QPushButton{}};
     QPushButton * m_closeButton{new QPushButton{}};
 
-    QWidget * m_titleError{new QWidget{}};
-    QHBoxLayout * m_errorLayout{new QHBoxLayout{}};
-    QPushButton * m_closeError{new QPushButton{"⨉"}};
-    QPushButton * m_copyError{new QPushButton{"⧉"}};
-    QLabel * m_errorLabel{new QLabel{"Success"}};
+public:
+};
+
+class UDP_Window : public QWidget {
+private:
+    QVBoxLayout * m_mainLayout{new QVBoxLayout{}};
 
     bool m_isDragging{false};
     QPoint * m_dragPosition{new QPoint{}};
@@ -185,21 +246,6 @@ protected:
     }
 
     virtual void createTitleError(void) {
-        m_titleError->setLayout(m_errorLayout);
-        m_errorLayout->addWidget(m_closeError);
-        m_errorLayout->addWidget(m_errorLabel);
-        m_errorLayout->addWidget(m_copyError);
-
-        m_titleError->setContentsMargins(0, 0, 0, 0);
-        m_errorLayout->setContentsMargins(0, 0, 0, 0);
-
-        m_closeError->setFixedSize(30, 30);
-        m_closeError->setStyleSheet("background-color: #330066;");
-        m_copyError->setFixedSize(30, 30);
-        m_copyError->setStyleSheet("background-color: #500066;");
-
-        connect(m_closeError, &QPushButton::clicked, this, &UDP_Window::defaultTitle);
-        connect(m_copyError, &QPushButton::clicked, this, &UDP_Window::copyError);
     }
 
     bool eventFilter(QObject *watched, QEvent *event) override {
