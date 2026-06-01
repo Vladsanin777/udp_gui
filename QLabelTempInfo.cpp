@@ -46,7 +46,6 @@ namespace QtEasy {
                 setMode(mode);
             }
 
-        public:
             void mode() {
                 return m_mode;
             }

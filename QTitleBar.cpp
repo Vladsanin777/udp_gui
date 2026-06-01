@@ -16,34 +16,29 @@ namespace QtEasy {
             QTitleBar(QString title = {}, 
                     QWidget * parent = nullptr) : QTitleBarEmpty{parent} {
                 m_title = new QLabel{title, this};
+
+                m_title->setObjectName("title");
                 
                 addWidget(m_title);
                 addStrach();
             }
 
-    QString title(void) {
-        return m_titleOrLog->title();
-    }
+            void addWidget(QWidget * widget) {
+                m_layout->addWidget(widget);
+            }
 
-    QString text(void) {
-        return m_title->text();
-    }
+            void addStrach() {
+                m_layout->addStrach();
+            }
 
-public slot:
-    void setText(QString text) {
-        m_titleOrLog->setText(text);
-    }
+            QString text(void) override {
+                return m_title->text();
+            }
 
-    void setTitle(QString text) {
-        m_titleOrLog->setTitle(text);
-    }
-
-    void setLog(QString text) {
-        m_titleOrLog->setLog(text);
-    }
-        public slots:
-            void setText(QString text) {
+        public slot:
+            void setText(QString text) override {
                 m_title->setText(text);
+                QTitleBarEmpty::setText(text);
             }
         };
     }

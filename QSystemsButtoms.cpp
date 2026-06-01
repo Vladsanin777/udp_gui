@@ -1,5 +1,9 @@
 #include <QWidget>
 #include <QString>
+#include <QHBoxLayout>
+#include <QPushButton>
+
+
 namespace QtEasy {
     namespace Widgets {
         class QSystemsButtons : public QWidget {
