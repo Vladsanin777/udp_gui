@@ -1,6 +1,11 @@
+#include <QWidget>
 #include <QApplication>
-#include <udp.c>
-#include <TitleBarLog.hpp>
+#include <QFormLayout>
+#include <QLineEdit>
+#include <QTextEdit>
+#include <QCheckBox>
+#include <udp.h>
+#include <QtEasy/TitlesBars/QTitleBarTempInfo.hpp>
 
 
 class UDP_Form : public QFormLayout {
@@ -14,10 +19,9 @@ private:
     QLineEdit * m_macSource{new QLineEdit{}};
     QLineEdit * m_macDestantion{new QLineEdit{}};
     QLineEdit * m_interface{new QLineEdit{}};
-    QCheckBox * m_fileCheckBox{new QCheckBox{}};
+    QCheckBox * m_isFile{new QCheckBox{}};
     QTextEdit * m_data{new QTextEdit{}};
     QLineEdit * m_fileName{new QLineEdit{}};
-    QPushButton * m_send{new QPushButton{"Send"}};
 
 public:
     UDP_Form(QWidget * parent = nullptr) :
@@ -29,9 +33,9 @@ public:
         addRow( "Mac source: ", m_macSource);
         addRow("Mac destantion: ", m_macDestantion);
         addRow("Interface: ", m_interface);
-        addRow("File: ", m_fileCheckBox);
+        addRow("File: ", m_isFile);
 
-        m_fileCheckBox->setTristate(false);
+        m_isFile->setTristate(false);
 
         selectFile();
 
@@ -42,7 +46,7 @@ public:
         m_data->setTabChangesFocus(true);
 
         for (int i = 0; i < count(); ++i) {
-            QLayoutItem* item = m_form->itemAt(i);
+            QLayoutItem* item = itemAt(i);
             if (QWidget* widget = item->widget()) {
                 widget->setFixedHeight(30); 
                 widget->setContentsMargins(0, 0, 0, 0);
@@ -50,34 +54,6 @@ public:
         }
         deleteText();
         selectData();
-    }
-
-    void deleteText() {
-        QFormLayout::TakeRowResult res = takeRow(8);
-        
-        if (res.labelItem) {
-            if (QWidget *labelWidget = res.labelItem->widget()) {
-                labelWidget->deleteLater();
-            }
-            delete res.labelItem;
-        }
-    }
-
-    void selectFile(void) {
-        m_data->hide();
-        m_fileName->show();
-        insertRow(8, "File name: ", m_fileName);
-    }
-
-    void selectData(void) {
-        m_fileName->hide();
-        m_data->show();
-        insertRow(8, "Data: ", m_data);
-    }
-
-    void onFileBoxToggle(bool checked) {
-        deleteText();
-        checked ? selectFile() : selectData();
     }
 
     QString getIpSource(void) {
@@ -108,156 +84,21 @@ public:
         return m_interface->text();
     }
 
-    bool getIsFile(void) {
-        return m_isFile->text();
+    bool isFile(void) {
+        return m_isFile->isTristate();
     }
 
     QString getData(void) {
-        return m_data->text();
+        return m_data->toPlainText();
     }
 
     QString getFileName(void) {
         return m_fileName->text();
     }
-};
-
-class UDP_Window : public QWidget {
-private:
-    QVBoxLayout * m_layout{new QVBoxLayout{}};
-
-    UDP_Form * m_form{new UDP_Form{}};
-
-    bool m_isDragging{false};
-    QPoint * m_dragPosition{new QPoint{}};
-
-    bool m_isResizing{false};
-    Qt::Edges m_resizeEdge{};
-    QPoint m_dragPos;
-    QRect m_origGeometry;
-    const int m_borderWidth{8};
-
-public:
-    UDP_Window(QWidget * parent = nullptr) : QWidget{parent} {
-        setLayout(m_layout);
-
-        resize(500, 500);
-
-        m_layout->setContentsMargins(0, 0, 0, 0);
-        m_layout->setSpacing(0);
-
-        m_layout->addLayout(m_form); 
-
-        connect(m_fileCheckBox, &QCheckBox::toggled, this, &UDP_Window::onFileBoxToggle);
-
-        m_form->insertRow(0, "Ip source: ", m_ipSource);
-        m_form->insertRow(1, "Ip destantion: ", m_ipDestantion);
-        m_form->insertRow(2, "Port source: ", m_portSource);
-        m_form->insertRow(3, "Port destantion: ", m_portDestantion);
-        m_form->insertRow(4, "Mac source: ", m_macSource);
-        m_form->insertRow(5, "Mac destantion: ", m_macDestantion);
-        m_form->insertRow(6, "Interface: ", m_interface);
-        m_form->insertRow(7, "File: ", m_fileCheckBox);
-        m_fileCheckBox->setTristate(false);
-
-        selectFile();
-
-        m_form->setContentsMargins(10, 10, 10, 10);
-        m_form->setVerticalSpacing(5);
-        m_form->setHorizontalSpacing(20);
-
-        m_data->setTabChangesFocus(true);
-
-        for (int i = 0; i < m_form->count(); ++i) {
-            QLayoutItem* item = m_form->itemAt(i);
-            if (QWidget* widget = item->widget()) {
-                widget->setFixedHeight(30); 
-                widget->setContentsMargins(0, 0, 0, 0);
-            }
-        }
-        deleteText();
-        selectData();
-    }
-
-protected:
-    void mousePressEvent(QMouseEvent *event) override {
-        QWindow * win = windowHandle();
-        if (event->button() == Qt::LeftButton) {
-            if (m_resizeEdge != 0) {
-                if (win) {
-                    win->startSystemResize(m_resizeEdge);
-                    event->accept();
-                    return;
-                }
-            }
-            
-            if (event->position().y() <= 40) {
-                if (win) {
-                    win->startSystemMove();
-                    event->accept();
-                    return;
-                }
-            }
-        }
-
-        QWidget::mousePressEvent(event);
-    }
-
-    void mouseDoubleClickEvent(QMouseEvent *event) {
-        if (event->position().y() <= 40) {
-            if (event->button() == Qt::LeftButton) {
-                if (window()->isMaximized()) {
-                    window()->showNormal();
-                } else {
-                    window()->showMaximized();
-                }
-                event->accept();
-            } else {
-                QWidget::mouseDoubleClickEvent(event);
-            }
-        }
-    }
-
-    void mouseMoveEvent(QMouseEvent *event) override {
-        QPoint pos = event->position().toPoint();
-
-        m_resizeEdge = Qt::Edges{};
-
-        if (pos.x() < m_borderWidth) {
-            m_resizeEdge |= Qt::LeftEdge;
-        }
-
-        if (pos.x() > width() - m_borderWidth) {
-            m_resizeEdge |= Qt::RightEdge;
-        }
-
-        if (pos.y() < m_borderWidth) {
-            m_resizeEdge |= Qt::TopEdge;
-        }
-
-        if (pos.y() > height() - m_borderWidth) {
-            m_resizeEdge |= Qt::BottomEdge;
-        }
-
-        if ((m_resizeEdge & Qt::LeftEdge && m_resizeEdge & Qt::TopEdge) \
-                || (m_resizeEdge & Qt::RightEdge && m_resizeEdge & Qt::BottomEdge)) {
-            setCursor(Qt::SizeFDiagCursor);
-        } else if ((m_resizeEdge & Qt::RightEdge && m_resizeEdge & Qt::TopEdge) \
-                || (m_resizeEdge & Qt::LeftEdge && m_resizeEdge & Qt::BottomEdge)) {
-            setCursor(Qt::SizeBDiagCursor);
-        } else if (m_resizeEdge & Qt::LeftEdge || m_resizeEdge & Qt::RightEdge) {
-            setCursor(Qt::SizeHorCursor);
-        } else if (m_resizeEdge & Qt::TopEdge || m_resizeEdge & Qt::BottomEdge) {
-            setCursor(Qt::SizeVerCursor);
-        } else {
-            setCursor(Qt::ArrowCursor);
-        }
-
-        QWidget::mouseMoveEvent(event);
-    }
 
 private:
     void deleteText() {
-        QFormLayout::TakeRowResult res = m_form->takeRow(8);
+        QFormLayout::TakeRowResult res = takeRow(8);
         
         if (res.labelItem) {
             if (QWidget *labelWidget = res.labelItem->widget()) {
@@ -270,18 +111,80 @@ private:
     void selectFile(void) {
         m_data->hide();
         m_fileName->show();
-        m_form->insertRow(8, "File name: ", m_fileName);
+        insertRow(8, "File name: ", m_fileName);
     }
 
     void selectData(void) {
         m_fileName->hide();
         m_data->show();
-        m_form->insertRow(8, "Data: ", m_data);
+        insertRow(8, "Data: ", m_data);
     }
 
     void onFileBoxToggle(bool checked) {
         deleteText();
         checked ? selectFile() : selectData();
+    }
+};
+
+using QtEasy::TitlesBars::QTitleBarTempInfo;
+
+class UDP_Window : public QWidget {
+    Q_OBJECT
+
+private:
+    QVBoxLayout * m_layout{nullptr};
+
+    QTitleBarTempInfo * m_titleBar{nullptr};
+
+    QPushButton * m_send{nullptr};
+
+    UDP_Form * m_form{nullptr};
+
+public:
+    UDP_Window(QWidget * parent = nullptr) : QWidget{parent} {
+        resize(500, 500);
+
+        m_layout = new QVBoxLayout{this};
+
+        m_layout->setContentsMargins(0, 0, 0, 0);
+        m_layout->setSpacing(0);
+
+        m_titleBar = new QTitleBarTempInfo{"UDP Transfer", this};
+        m_titleBar->setFixedHeight(44);
+
+        m_send = new QPushButton{"Send!", this};
+        m_send->setFixedHeight(30);
+        m_send->setFixedWidth(70);
+
+        m_titleBar->addWidget(m_send);
+
+        connect(m_send, &QPushButton::clicked, this, &UDP_Window::clickSend);
+
+        m_layout->addWidget(m_titleBar);
+
+        m_form = new UDP_Form{};
+
+        m_layout->addLayout(m_form); 
+
+        setStyleSheet(
+            "QLineEdit, QTextEdit,"
+            "QPushButton,"
+            "QCheckBox::indicator {"
+            "   color: white;"
+            "   border: 2px solid white;"
+            "   border-radius: 6px;"
+            "}"
+            "UDP_Window {"
+            "   background-color: #317d05;"
+            "}"
+            "QPushButton, QLineEdit,"
+            "QTextEdit, QCheckBox::indicator {"
+            "   background-color: #51057d;"
+            "}"
+            "QCheckBox::indicator::checked {"
+            "   background-color: #7d0541"
+            "}"
+        );
     }
 
     void clickSend() {
@@ -306,7 +209,7 @@ private:
             goto getNotPack;
         }
 
-        ipSource = qPrintable(m_ipSource->text());
+        ipSource = qPrintable(m_form->getIpSource());
 
         if (ipSource == NULL) {
             errorMessage = "Error: Get not IP source!";
@@ -320,7 +223,7 @@ private:
             goto setNotIpSource;
         }
 
-        ipDestantion = qPrintable(m_ipDestantion->text());
+        ipDestantion = qPrintable(m_form->getIpDestantion());
 
         if (ipDestantion == NULL) {
             errorMessage = "Error: Get not IP destantion!";
@@ -334,7 +237,7 @@ private:
             goto setNotIpDestantion;
         }
 
-        portSource = qPrintable(m_portSource->text());
+        portSource = qPrintable(m_form->getPortSource());
 
         if (portSource == NULL) {
             errorMessage = "Error: Get not port source!";
@@ -348,7 +251,7 @@ private:
             goto setNotPortSource;
         }
 
-        portDestantion = qPrintable(m_portDestantion->text());
+        portDestantion = qPrintable(m_form->getPortDestantion());
 
         if (portDestantion == NULL) {
             errorMessage = "Error: Get not port destantion!";
@@ -362,7 +265,7 @@ private:
             goto setNotPortDestantion;
         }
 
-        macSource = qPrintable(m_macSource->text());
+        macSource = qPrintable(m_form->getMacSource());
 
         if (macSource == NULL) {
             errorMessage = "Error: Get not MAC source!";
@@ -376,7 +279,7 @@ private:
             goto setNotMacSource;
         }
 
-        macDestantion = qPrintable(m_macDestantion->text());
+        macDestantion = qPrintable(m_form->getMacDestantion());
 
         if (macDestantion == NULL) {
             errorMessage = "Error: Get not MAC destantion!";
@@ -390,7 +293,7 @@ private:
             goto setNotMacDestantion;
         }
 
-        interface = qPrintable(m_interface->text());
+        interface = qPrintable(m_form->getInterface());
 
         if (interface == NULL) {
             errorMessage = "Error: Get not interface!";
@@ -404,11 +307,11 @@ private:
             goto setNotInterface;
         }
 
-        isFile = m_fileCheckBox->isTristate();
+        isFile = m_form->isFile();
 
         if (isFile == true) {
 
-            fileName = qPrintable(m_fileName->text());
+            fileName = qPrintable(m_form->getFileName());
 
             if (fileName == NULL) {
                 errorMessage = "Error: Get not file name!";
@@ -424,7 +327,7 @@ private:
 
         } else {
 
-            data = qPrintable(m_data->toPlainText());
+            data = qPrintable(m_form->getData());
 
             if (data == NULL) {
                 errorMessage = "Error: Get not data!";
@@ -479,29 +382,32 @@ getNotPack:
     }
 
     void defaultTitle(void) {
-        m_titleError->hide();
-        m_titleLabel->show();
-        m_customTitleBar->setStyleSheet("background-color: #330066;");
+        m_titleBar->switchText();
+        m_titleBar->setStyleSheet(
+            "QtEasy--TitlesBars--QTitleBarTempInfo {"
+            "   background-color: transporent;"
+            "}"
+        );
     }
 
     void errorTitle(const char * message) {
-        m_titleLabel->hide();
-        m_titleError->show();
-        m_errorLabel->setText(message);
-        m_customTitleBar->setStyleSheet("background-color: red;");
+        m_titleBar->switchTempInfo();
+        m_titleBar->setTempInfo(message);
+        m_titleBar->setStyleSheet(
+            "QtEasy--TitlesBars--QTitleBarTempInfo {"
+            "   background-color: red;"
+            "}"
+        );
     }
 
     void successTitle(void) {
-        m_titleLabel->hide();
-        m_titleError->show();
-        m_errorLabel->setText("Success: send!");
-        m_customTitleBar->setStyleSheet("background-color: green;");
-    }
-
-    void copyError(void) {
-        QClipboard* clipboard = QApplication::clipboard();
-        const char * errorMessage = qPrintable(m_errorLabel->text());
-        clipboard->setText(errorMessage);
+        m_titleBar->switchTempInfo();
+        m_titleBar->setText("Success: send!");
+        m_titleBar->setStyleSheet(
+            "QtEasy--TitlesBars--QTitleBarTempInfo {"
+            "   background-color: blue;"
+            "}"
+        );
     }
 };
 
@@ -512,3 +418,5 @@ int main(int argc, char ** argv) {
 
     return app.exec();
 }
+
+#include "udp.moc"
