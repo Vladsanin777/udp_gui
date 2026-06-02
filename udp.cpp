@@ -1,31 +1,45 @@
 #include <QWidget>
 #include <QApplication>
+#include <QStyle>
+#include <QStyleOption>
+#include <QPainter>
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QTextEdit>
 #include <QCheckBox>
-#include <udp.h>
 #include <QtEasy/TitlesBars/QTitleBarTempInfo.hpp>
+#include <udp.h>
 
 
 class UDP_Form : public QFormLayout {
     Q_OBJECT
 
 private:
-    QLineEdit * m_ipSource{new QLineEdit{}};
-    QLineEdit * m_ipDestantion{new QLineEdit{}};
-    QLineEdit * m_portSource{new QLineEdit{}};
-    QLineEdit * m_portDestantion{new QLineEdit{}};
-    QLineEdit * m_macSource{new QLineEdit{}};
-    QLineEdit * m_macDestantion{new QLineEdit{}};
-    QLineEdit * m_interface{new QLineEdit{}};
-    QCheckBox * m_isFile{new QCheckBox{}};
-    QTextEdit * m_data{new QTextEdit{}};
-    QLineEdit * m_fileName{new QLineEdit{}};
+    QLineEdit * m_ipSource{nullptr};
+    QLineEdit * m_ipDestantion{nullptr};
+    QLineEdit * m_portSource{nullptr};
+    QLineEdit * m_portDestantion{nullptr};
+    QLineEdit * m_macSource{nullptr};
+    QLineEdit * m_macDestantion{nullptr};
+    QLineEdit * m_interface{nullptr};
+    QCheckBox * m_isFile{nullptr};
+    QTextEdit * m_data{nullptr};
+    QLineEdit * m_fileName{nullptr};
 
 public:
     UDP_Form(QWidget * parent = nullptr) :
             QFormLayout{parent} {
+        m_ipSource = new QLineEdit{};
+        m_ipDestantion = new QLineEdit{};
+        m_portSource = new QLineEdit{};
+        m_portDestantion = new QLineEdit{};
+        m_macSource = new QLineEdit{};
+        m_macDestantion = new QLineEdit{};
+        m_interface = new QLineEdit{};
+        m_isFile = new QCheckBox{};
+        m_data = new QTextEdit{};
+        m_fileName = new QLineEdit{};
+
         addRow("Ip source: ", m_ipSource);
         addRow("Ip destantion: ", m_ipDestantion);
         addRow("Port source: ", m_portSource);
@@ -34,6 +48,9 @@ public:
         addRow("Mac destantion: ", m_macDestantion);
         addRow("Interface: ", m_interface);
         addRow("File: ", m_isFile);
+
+        connect(m_isFile, &QCheckBox::toggled,
+                this, &UDP_Form::onFileBoxToggle);
 
         m_isFile->setTristate(false);
 
@@ -152,9 +169,13 @@ public:
         m_titleBar = new QTitleBarTempInfo{"UDP Transfer", this};
         m_titleBar->setFixedHeight(44);
 
+        connect(m_titleBar, &QTitleBarTempInfo::showText,
+                this, &UDP_Window::defaultTitle);
+
         m_send = new QPushButton{"Send!", this};
         m_send->setFixedHeight(30);
         m_send->setFixedWidth(70);
+        m_send->setObjectName("send");
 
         m_titleBar->addWidget(m_send);
 
@@ -168,7 +189,7 @@ public:
 
         setStyleSheet(
             "QLineEdit, QTextEdit,"
-            "QPushButton,"
+            "QPushButton, UDP_Window,"
             "QCheckBox::indicator {"
             "   color: white;"
             "   border: 2px solid white;"
@@ -181,7 +202,9 @@ public:
             "QTextEdit, QCheckBox::indicator {"
             "   background-color: #51057d;"
             "}"
-            "QCheckBox::indicator::checked {"
+            "QCheckBox::indicator::checked,"
+            "QtEasy--Widgets--QSystemsButtons #close,"
+            "QPushButton#send {"
             "   background-color: #7d0541"
             "}"
         );
@@ -382,10 +405,9 @@ getNotPack:
     }
 
     void defaultTitle(void) {
-        m_titleBar->switchText();
         m_titleBar->setStyleSheet(
             "QtEasy--TitlesBars--QTitleBarTempInfo {"
-            "   background-color: transporent;"
+            "   background-color: transparent;"
             "}"
         );
     }
@@ -395,7 +417,7 @@ getNotPack:
         m_titleBar->setTempInfo(message);
         m_titleBar->setStyleSheet(
             "QtEasy--TitlesBars--QTitleBarTempInfo {"
-            "   background-color: red;"
+            "   background-color: #7d0541;"
             "}"
         );
     }
@@ -405,9 +427,17 @@ getNotPack:
         m_titleBar->setText("Success: send!");
         m_titleBar->setStyleSheet(
             "QtEasy--TitlesBars--QTitleBarTempInfo {"
-            "   background-color: blue;"
+            "   background-color: #1a2e91;"
             "}"
         );
+    }
+
+protected:
+    void paintEvent(QPaintEvent *event) {
+        QStyleOption opt = QStyleOption{};
+        opt.initFrom(this);
+        QPainter p(this);
+        style()->drawPrimitive(QStyle::PE_Widget, &opt, &p, this);
     }
 };
 
