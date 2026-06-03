@@ -1,6 +1,8 @@
 #include <QWidget>
 #include <QApplication>
 #include <QStyle>
+#include <QTranslator>
+#include <QLocale>
 #include <QStyleOption>
 #include <QPainter>
 #include <QFormLayout>
@@ -40,14 +42,14 @@ public:
         m_data = new QTextEdit{};
         m_fileName = new QLineEdit{};
 
-        addRow("Ip source: ", m_ipSource);
-        addRow("Ip destantion: ", m_ipDestantion);
-        addRow("Port source: ", m_portSource);
-        addRow("Port destantion: ", m_portDestantion);
-        addRow( "Mac source: ", m_macSource);
-        addRow("Mac destantion: ", m_macDestantion);
-        addRow("Interface: ", m_interface);
-        addRow("File: ", m_isFile);
+        addRow(tr("IP source: "), m_ipSource);
+        addRow(tr("IP destantion: "), m_ipDestantion);
+        addRow(tr("Port source: "), m_portSource);
+        addRow(tr("Port destantion: "), m_portDestantion);
+        addRow(tr("Mac source: "), m_macSource);
+        addRow(tr("Mac destantion: "), m_macDestantion);
+        addRow(tr("Interface: "), m_interface);
+        addRow(tr("File: "), m_isFile);
 
         connect(m_isFile, &QCheckBox::toggled,
                 this, &UDP_Form::onFileBoxToggle);
@@ -128,13 +130,13 @@ private:
     void selectFile(void) {
         m_data->hide();
         m_fileName->show();
-        insertRow(8, "File name: ", m_fileName);
+        insertRow(8, tr("File name: "), m_fileName);
     }
 
     void selectData(void) {
         m_fileName->hide();
         m_data->show();
-        insertRow(8, "Data: ", m_data);
+        insertRow(8, tr("Data: "), m_data);
     }
 
     void onFileBoxToggle(bool checked) {
@@ -166,15 +168,15 @@ public:
         m_layout->setContentsMargins(0, 0, 0, 0);
         m_layout->setSpacing(0);
 
-        m_titleBar = new QTitleBarTempInfo{"UDP Transfer", this};
+        m_titleBar = new QTitleBarTempInfo{tr("UDP Transfer"), this};
         m_titleBar->setFixedHeight(44);
 
         connect(m_titleBar, &QTitleBarTempInfo::showText,
                 this, &UDP_Window::defaultTitle);
 
-        m_send = new QPushButton{"Send!", this};
+        m_send = new QPushButton{tr("Send!"), this};
         m_send->setFixedHeight(30);
-        m_send->setFixedWidth(70);
+        m_send->setFixedWidth(90);
         m_send->setObjectName("send");
 
         m_titleBar->addWidget(m_send);
@@ -214,156 +216,156 @@ public:
     }
 
     void clickSend() {
-        ssize_t ret = 0;
-        const char * ipSource = NULL;
-        const char * ipDestantion = NULL;
-        const char * portSource = NULL;
-        const char * portDestantion = NULL;
-        const char * macSource = NULL;
-        const char * macDestantion = NULL;
-        const char * interface = NULL;
-        bool isFile = false;
-        const char * data = NULL;
-        const char * fileName = NULL;
-        const char * errorMessage = "Success";
-        udp_pack_t pack = NULL;
+        ssize_t ret{0};
+        QString ipSource{};
+        QString ipDestantion{};
+        QString portSource{};
+        QString portDestantion{};
+        QString macSource{};
+        QString macDestantion{};
+        QString interface{};
+        bool isFile{false};
+        QString data{};
+        QString fileName{};
+        QString errorMessage{tr("Success: send!")};
+        udp_pack_t pack{nullptr};
 
         pack = init_udp_pack();
 
-        if (pack == NULL) {
-            errorMessage = "Error: Get not Pack!";
+        if (pack == nullptr) {
+            errorMessage = tr("Error: Get not Pack!");
             goto getNotPack;
         }
 
-        ipSource = qPrintable(m_form->getIpSource());
+        ipSource = m_form->getIpSource();
 
-        if (ipSource == NULL) {
-            errorMessage = "Error: Get not IP source!";
+        if (ipSource.isEmpty()) {
+            errorMessage = tr("Error: Get not IP source!");
             goto getNotIpSource;
         }
 
-        ret = set_ip_address_source_udp_pack(pack, ipSource);
+        ret = set_ip_address_source_udp_pack(pack, qPrintable(ipSource));
 
         if (ret != 0) {
-            errorMessage = "Error: Set not IP source!";
+            errorMessage = tr("Error: Set not IP source!");
             goto setNotIpSource;
         }
 
-        ipDestantion = qPrintable(m_form->getIpDestantion());
+        ipDestantion = m_form->getIpDestantion();
 
-        if (ipDestantion == NULL) {
-            errorMessage = "Error: Get not IP destantion!";
+        if (ipDestantion.isEmpty()) {
+            errorMessage = tr("Error: Get not IP destantion!");
             goto getNotIpDestantion;
         }
 
-        ret = set_ip_address_destantion_udp_pack(pack, ipDestantion);
+        ret = set_ip_address_destantion_udp_pack(pack, qPrintable(ipDestantion));
 
         if (ret != 0) {
-            errorMessage = "Error: Set not IP destantion!";
+            errorMessage = tr("Error: Set not IP destantion!");
             goto setNotIpDestantion;
         }
 
-        portSource = qPrintable(m_form->getPortSource());
+        portSource = m_form->getPortSource();
 
-        if (portSource == NULL) {
-            errorMessage = "Error: Get not port source!";
+        if (portSource.isEmpty()) {
+            errorMessage = tr("Error: Get not port source!");
             goto getNotPortSource;
         }
 
-        ret = set_port_source_udp_pack(pack, portSource);
+        ret = set_port_source_udp_pack(pack, qPrintable(portSource));
 
         if (ret != 0) {
-            errorMessage = "Error: Set not port source!";
+            errorMessage = tr("Error: Set not port source!");
             goto setNotPortSource;
         }
 
-        portDestantion = qPrintable(m_form->getPortDestantion());
+        portDestantion = m_form->getPortDestantion();
 
-        if (portDestantion == NULL) {
-            errorMessage = "Error: Get not port destantion!";
+        if (portDestantion.isEmpty()) {
+            errorMessage = tr("Error: Get not port destantion!");
             goto getNotPortDestantion;
         }
 
-        ret = set_port_destantion_udp_pack(pack, portDestantion);
+        ret = set_port_destantion_udp_pack(pack, qPrintable(portDestantion));
 
         if (ret != 0) {
-            errorMessage = "Error: Set not port destantion!";
+            errorMessage = tr("Error: Set not port destantion!");
             goto setNotPortDestantion;
         }
 
-        macSource = qPrintable(m_form->getMacSource());
+        macSource = m_form->getMacSource();
 
-        if (macSource == NULL) {
-            errorMessage = "Error: Get not MAC source!";
+        if (macSource.isEmpty()) {
+            errorMessage = tr("Error: Get not MAC source!");
             goto getNotMacSource;
         }
 
-        ret = set_mac_address_source_udp_pack(pack, macSource);
+        ret = set_mac_address_source_udp_pack(pack, qPrintable(macSource));
 
         if (ret != 0) {
-            errorMessage = "Error: Set not MAC source!";
+            errorMessage = tr("Error: Set not MAC source!");
             goto setNotMacSource;
         }
 
-        macDestantion = qPrintable(m_form->getMacDestantion());
+        macDestantion = m_form->getMacDestantion();
 
-        if (macDestantion == NULL) {
-            errorMessage = "Error: Get not MAC destantion!";
+        if (macDestantion.isEmpty()) {
+            errorMessage = tr("Error: Get not MAC destantion!");
             goto getNotMacDestantion;
         }
 
-        ret = set_mac_address_destantion_udp_pack(pack, macDestantion);
+        ret = set_mac_address_destantion_udp_pack(pack, qPrintable(macDestantion));
 
         if (ret != 0) {
-            errorMessage = "Error: Set not MAC destantion!";
+            errorMessage = tr("Error: Set not MAC destantion!");
             goto setNotMacDestantion;
         }
 
-        interface = qPrintable(m_form->getInterface());
+        interface = m_form->getInterface();
 
-        if (interface == NULL) {
-            errorMessage = "Error: Get not interface!";
+        if (interface.isEmpty()) {
+            errorMessage = tr("Error: Get not interface!");
             goto getNotInterface;
         }
 
-        ret = set_interface_udp_pack(pack, interface);
+        ret = set_interface_udp_pack(pack, qPrintable(interface));
 
         if (ret != 0) {
-            errorMessage = "Error: Set not interface!";
+            errorMessage = tr("Error: Set not interface!");
             goto setNotInterface;
         }
 
         isFile = m_form->isFile();
 
-        if (isFile == true) {
+        if (isFile) {
 
-            fileName = qPrintable(m_form->getFileName());
+            fileName = m_form->getFileName();
 
-            if (fileName == NULL) {
-                errorMessage = "Error: Get not file name!";
+            if (fileName.isEmpty()) {
+                errorMessage = tr("Error: Get not file name!");
                 goto getNotFileName;
             }
 
-            ret = set_file_data_udp_pack(pack, fileName);
+            ret = set_file_data_udp_pack(pack, qPrintable(fileName));
 
             if (ret != 0) {
-                errorMessage = "Error: Set not file name!";
+                errorMessage = tr("Error: Set not file name!");
                 goto setNotFileName;
             }
 
         } else {
 
-            data = qPrintable(m_form->getData());
+            data = m_form->getData();
 
-            if (data == NULL) {
-                errorMessage = "Error: Get not data!";
+            if (data.isEmpty()) {
+                errorMessage = tr("Error: Get not data!");
                 goto getNotData;
             }
 
-            ret = set_data_udp_pack(pack, data, strlen(data));
+            ret = set_data_udp_pack(pack, qPrintable(data), data.size());
 
             if (ret != 0) {
-                errorMessage = "Error: Set not data!";
+                errorMessage = tr("Error: Set not data!");
                 goto setNotData;
             }
 
@@ -372,13 +374,13 @@ public:
         ret = send_udp_pack(pack);
 
         if (ret != 0) {
-            errorMessage = "Error: Send not pack!";
+            errorMessage = tr("Error: Send not pack!");
             goto sendNotPack;
         }
 
         destroy_udp_pack(pack);
 
-        successTitle();
+        successTitle(errorMessage);
         
         return;
 
@@ -415,7 +417,7 @@ getNotPack:
         );
     }
 
-    void errorTitle(const char * message) {
+    void errorTitle(QString message) {
         m_titleBar->switchTempInfo();
         m_titleBar->setTempInfo(message);
         m_titleBar->setStyleSheet(
@@ -425,9 +427,9 @@ getNotPack:
         );
     }
 
-    void successTitle(void) {
+    void successTitle(QString message) {
         m_titleBar->switchTempInfo();
-        m_titleBar->setText("Success: send!");
+        m_titleBar->setText(message);
         m_titleBar->setStyleSheet(
             "QtEasy--TitlesBars--QTitleBarTempInfo {"
             "   background-color: #1a2e91;"
@@ -446,6 +448,15 @@ protected:
 
 int main(int argc, char ** argv) {
     QApplication app{argc, argv};
+
+    QTranslator translator;
+
+    QLocale systemLocale = QLocale::system();
+
+    if (translator.load(systemLocale, "udp", "_", ":/i18n")) {
+        app.installTranslator(&translator);
+    }
+
     UDP_Window window{};
     window.show();
 

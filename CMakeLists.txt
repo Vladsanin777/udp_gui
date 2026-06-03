@@ -10,16 +10,12 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
-
+find_package(Qt6 REQUIRED COMPONENTS Core Widgets LinguistTools)
 
 find_path(QT_EASY_INCLUDE_DIR QtEasy/ PATHS /usr/local/include /usr/include)
-
 find_library(QT_EASY_SHARED_LIB NAMES libQtEasy.so PATHS /usr/local/lib /usr/lib)
 
-
 find_path(UDP_INCLUDE_DIR udp.h PATHS /usr/local/include /usr/include)
-
 find_library(UDP_SHARED_LIB NAMES udp PATHS /usr/local/lib /usr/lib)
 find_library(UDP_STATIC_LIB NAMES libudp.a PATHS /usr/local/lib /usr/lib)
 
@@ -28,9 +24,7 @@ set(PROJECT_SOURCES
 )
 
 add_executable(shared_udp ${PROJECT_SOURCES})
-
 target_include_directories(shared_udp PRIVATE ${UDP_INCLUDE_DIR} ${QT_EASY_INCLUDE_DIR})
-
 target_link_libraries(shared_udp PRIVATE 
     Qt6::Core 
     Qt6::Widgets
@@ -38,20 +32,27 @@ target_link_libraries(shared_udp PRIVATE
     ${QT_EASY_SHARED_LIB}
 )
 
-install(TARGETS shared_udp
-    RUNTIME DESTINATION bin
-    COMPONENT shared-app
-)
-
 add_executable(static_udp ${PROJECT_SOURCES})
-
 target_include_directories(static_udp PRIVATE ${UDP_INCLUDE_DIR})
-
 target_link_libraries(static_udp PRIVATE 
     Qt6::Core 
     Qt6::Widgets
     ${UDP_STATIC_LIB}
     ${QT_EASY_SHARED_LIB}
+)
+
+qt_add_translations(shared_udp
+    TS_FILES 
+        ${CMAKE_CURRENT_SOURCE_DIR}/udp_en.ts
+        ${CMAKE_CURRENT_SOURCE_DIR}/udp_ru.ts
+    TARGETS 
+        shared_udp 
+        static_udp
+)
+
+install(TARGETS shared_udp
+    RUNTIME DESTINATION bin
+    COMPONENT shared-app
 )
 
 install(TARGETS static_udp
