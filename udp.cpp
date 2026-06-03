@@ -9,6 +9,7 @@
 #include <QLineEdit>
 #include <QTextEdit>
 #include <QCheckBox>
+#include <QFile>
 #include <QtEasy/TitlesBars/QTitleBarTempInfo.hpp>
 #include <udp.h>
 
@@ -188,31 +189,6 @@ public:
         m_form = new UDP_Form{};
 
         m_layout->addLayout(m_form); 
-
-        setStyleSheet(
-            "QLineEdit, QTextEdit,"
-            "QPushButton, UDP_Window,"
-            "QCheckBox::indicator {"
-            "   color: white;"
-            "   border: 2px solid white;"
-            "   border-radius: 6px;"
-            "}"
-            "QLabel {"
-            "   color: white;"
-            "}"
-            "UDP_Window {"
-            "   background-color: #317d05;"
-            "}"
-            "QPushButton, QLineEdit,"
-            "QTextEdit, QCheckBox::indicator {"
-            "   background-color: #51057d;"
-            "}"
-            "QCheckBox::indicator::checked,"
-            "QtEasy--Widgets--QSystemsButtons #close,"
-            "QPushButton#send {"
-            "   background-color: #7d0541"
-            "}"
-        );
     }
 
     void clickSend() {
@@ -448,6 +424,12 @@ protected:
 
 int main(int argc, char ** argv) {
     QApplication app{argc, argv};
+
+    QFile styleFile("udp.qss");
+    if (styleFile.open(QFile::ReadOnly)) {
+        QString styleSheet = QLatin1String(styleFile.readAll());
+        app.setStyleSheet(styleSheet);
+    }
 
     QTranslator translator;
 
