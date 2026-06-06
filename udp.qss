@@ -9,12 +9,12 @@ QLabel {
     color: white;
 }
 UDP_Window {
-    background-color: #317d05;
+    background-color: #070c52;
 }
 
 QPushButton, QLineEdit,
 QTextEdit, QCheckBox::indicator {
-    background-color: #51057d;
+    background-color: #3a0752;
 }
 
 QCheckBox::indicator::checked,
