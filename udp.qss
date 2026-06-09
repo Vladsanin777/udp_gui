@@ -2,7 +2,6 @@ QLineEdit, QTextEdit,
 QPushButton, UDP_Window,
 QCheckBox::indicator {
     color: white;
-    border: 2px solid white;
     border-radius: 6px;
 }
 
@@ -15,16 +14,18 @@ QLabel {
 }
 
 UDP_Window {
-    background-color: #070c52;
+    background-color: #13131a;
+    border-radius: 6px;
 }
 
 QPushButton, QLineEdit,
 QTextEdit, QCheckBox::indicator {
-    background-color: #3a0752;
+    background-color: #38384a;
 }
 
 QCheckBox::indicator::checked,
 QtEasy--Widgets--QSystemsButtons #close,
 QPushButton#send {
-    background-color: #7d0541;
+    background-color: #f2ef41;
+    color: black;
 }

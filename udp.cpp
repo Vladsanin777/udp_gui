@@ -408,7 +408,7 @@ getNotPack:
         m_titleBar->setText(message);
         m_titleBar->setStyleSheet(
             "QtEasy--TitlesBars--QTitleBarTempInfo {"
-            "   background-color: #1a2e91;"
+            "   background-color: #438c41;"
             "}"
         );
     }
