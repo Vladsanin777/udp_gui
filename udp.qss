@@ -5,9 +5,15 @@ QCheckBox::indicator {
     border: 2px solid white;
     border-radius: 6px;
 }
+
+QTextEdit {
+    color: white;
+}
+
 QLabel {
     color: white;
 }
+
 UDP_Window {
     background-color: #070c52;
 }
