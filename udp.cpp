@@ -382,6 +382,7 @@ getNotIpSource:
         destroy_udp_pack(pack);
 getNotPack:
         errorTitle(errorMessage);
+
         return;
     }
 
@@ -405,7 +406,7 @@ getNotPack:
 
     void successTitle(QString message) {
         m_titleBar->switchTempInfo();
-        m_titleBar->setText(message);
+        m_titleBar->setTempInfo(message);
         m_titleBar->setStyleSheet(
             "QtEasy--TitlesBars--QTitleBarTempInfo {"
             "   background-color: #438c41;"
